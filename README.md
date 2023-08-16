@@ -12,6 +12,7 @@ You can also use admission controllers and apply these same rules via Namespace 
 
 * What keys are you going to use to taint your nodes? 
 * What keys are you going to use for your node affinity matching? This example is using: topology.kubernetes.io/zone
+* Do you want to expose these parameters to all workloads or are you going to have special workloads (Like AI/ML) that you might want to just have a special supply chain handle.
 
 ## Update the Convention Template
 
