@@ -1,0 +1,4 @@
+package_overlays:
+- name: "cnrs"
+  secrets: 
+  - name: "config-features-overlay"

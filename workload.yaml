@@ -1,0 +1,19 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: cook-app-two
+  namespace: jeremy
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
+    app.kubernetes.io/part-of: cook-app-two
+spec:
+  params:
+    - name: tolerations
+      value: test
+    - name: affinity
+      value: ["joe","jeremy"]
+  source:
+    git:
+      url: ssh://git@github.com/x95castle1/cook-app-two
+      ref:
+        branch: main

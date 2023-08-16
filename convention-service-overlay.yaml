@@ -1,0 +1,111 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: convention-service-overlay
+  namespace: tap-install
+type: Opaque
+stringData:
+  convention-service-overlay.yaml: |
+    #@ load("@ytt:overlay", "overlay")
+    #@ load("@ytt:template", "template")
+  
+    #@overlay/match by=overlay.subset({"kind": "ClusterConfigTemplate","metadata":{"name":"convention-template"}}), expects="0+"
+    ---
+    spec:
+      ytt: |
+        #@ load("@ytt:data", "data")
+
+        #@ def param(key):
+        #@   if not key in data.values.params:
+        #@     return None
+        #@   end
+        #@   return data.values.params[key]
+        #@ end
+
+        #@ def merge_labels(fixed_values):
+        #@   labels = {}
+        #@   if hasattr(data.values.workload.metadata, "labels"):
+        #@     labels.update(data.values.workload.metadata.labels)
+        #@   end
+        #@   labels.update(fixed_values)
+        #@   return labels
+        #@ end
+
+        #@ def build_fixed_annotations():
+        #@   fixed_annotations = { "developer.conventions/target-containers": "workload" }
+        #@   if param("debug"):
+        #@     fixed_annotations["apps.tanzu.vmware.com/debug"] = param("debug")
+        #@   end
+        #@   if param("live-update"):
+        #@     fixed_annotations["apps.tanzu.vmware.com/live-update"] = param("live-update")
+        #@   end
+        #@   return fixed_annotations
+        #@ end
+
+        #@ def merge_annotations(fixed_values):
+        #@   annotations = {}
+        #@   if hasattr(data.values.workload.metadata, "annotations"):
+        #@     # DEPRECATED: remove in a future release
+        #@     annotations.update(data.values.workload.metadata.annotations)
+        #@   end
+        #@   if type(param("annotations")) == "dict" or type(param("annotations")) == "struct":
+        #@     annotations.update(param("annotations"))
+        #@   end
+        #@   annotations.update(fixed_values)
+        #@   return annotations
+        #@ end
+
+        #@ def affinity():
+        #@   values = []
+        #@   for val in param("affinity"):
+        #@     values.append(val)
+        #@   end
+        #@   return values
+        #@ end
+
+        apiVersion: conventions.carto.run/v1alpha1
+        kind: PodIntent
+        metadata:
+          name: #@ data.values.workload.metadata.name
+          labels: #@ merge_labels({ "app.kubernetes.io/component": "intent" })
+        spec:
+          serviceAccountName: #@ data.values.params.serviceAccount
+          template:
+            metadata:
+              annotations: #@ merge_annotations(build_fixed_annotations())
+              labels: #@ merge_labels({ "app.kubernetes.io/component": "run", "carto.run/workload-name": data.values.workload.metadata.name })
+            spec:
+              #@ if hasattr(data.values.params, "tolerations"):
+              tolerations:
+              - key: #@ data.values.params.tolerations
+                operator: "Exists"
+                effect: "NoSchedule"
+              #@ end
+              #@ if hasattr(data.values.params, "affinity"):
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: topology.kubernetes.io/zone
+                        operator: In
+                        values: #@ affinity()
+              #@ end
+              serviceAccountName: #@ data.values.params.serviceAccount
+              containers:
+                - name: workload
+                  image: #@ data.values.image
+                  securityContext:
+                    runAsUser: 1000
+                  #@ if hasattr(data.values.workload.spec, "env"):
+                  env:
+                    #@ for var in data.values.workload.spec.env:
+                    - name: #@ var.name
+                      #@ if/end hasattr(var, "value"):
+                      value: #@ var.value
+                      #@ if/end hasattr(var, "valueFrom"):
+                      valueFrom: #@ var.valueFrom
+                    #@ end
+                  #@ end
+                  #@ if/end hasattr(data.values.workload.spec, "resources"):
+                  resources: #@ data.values.workload.spec["resources"]

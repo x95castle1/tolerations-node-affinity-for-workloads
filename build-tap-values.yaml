@@ -1,0 +1,4 @@
+package_overlays:
+- name: "ootb-templates"
+  secrets: 
+  - name: "convention-service-overlay"

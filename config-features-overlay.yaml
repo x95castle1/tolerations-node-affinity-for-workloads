@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: config-features-overlay
+  namespace: tap-install #! namespace where tap is installed
+stringData:
+  config-features-overlay.yaml: |
+    #@ load("@ytt:overlay", "overlay")
+    #@overlay/match by=overlay.subset({"kind":"ConfigMap","metadata":{"name":"config-features"}})
+    ---
+    data:
+      #@overlay/match missing_ok=True
+      kubernetes.podspec-tolerations: enabled
+      #@overlay/match missing_ok=True
+      kubernetes.podspec-affinity: enabled
+  
