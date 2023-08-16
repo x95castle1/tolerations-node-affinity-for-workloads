@@ -58,7 +58,7 @@ k get cct convention-template
 
 ## Update the CNRS Config Map on Run Cluster
 
-Knative by default doesn't allow node affinity or tolerations to be applied to clusters. You need to adjust the feature flag that allows these features. More can be found in the knative documentation:
+Knative by default doesn't allow node affinity or tolerations to be applied to services. You need to adjust the feature flag that allows these features. More can be found in the knative documentation:
 
 * https://knative.dev/docs/serving/configuration/feature-flags/
 
