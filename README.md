@@ -82,7 +82,7 @@ stringData:
       kubernetes.podspec-affinity: enabled
 ```
 
-Update your tap-values on the build cluster to refer to the new overlay secret you created.
+Update your tap-values on the run cluster to refer to the new overlay secret you created.
 
 ```
 package_overlays:
